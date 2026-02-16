@@ -1,0 +1,26 @@
+# Vivado files
+*.jou
+*.log
+*.str
+*.xpr
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+.Xil/
+vivado*.backup*
+
+# Simulation files
+*.wdb
+*.wcfg
+xsim.dir/
+*.pb
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+
+# Keep synthesis reports
+!synthesis/reports/*.rpt
