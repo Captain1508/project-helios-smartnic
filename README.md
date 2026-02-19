@@ -26,7 +26,22 @@
 - Tests both 4-bit and 64-bit configurations simultaneously
 - All tests passing ✓
 
-**Next:** Day 3 - Packet Detector FSM
+### Day 3: Packet Detector FSM ✓ COMPLETE
+**Module:** `packet_detector.sv`
+- Two-state FSM (IDLE, ACTIVE)
+- Detects rising edge of data_valid signal
+- Generates single-cycle packet_start pulse
+- Clean state transitions with synchronous reset
+
+**Verification:** `tb_packet_detector.sv`
+- 4 comprehensive test cases (all passing):
+  1. Reset state verification
+  2. Single packet detection
+  3. Back-to-back packet handling
+  4. Long packet (no re-trigger)
+- Waveforms captured for all scenarios
+
+**Next:** Day 4 - Statistics Engine
 
 ## Overview
 Hardware-accelerated packet timestamping and monitoring engine inspired by SmartNIC architectures used in high-frequency trading environments.
