@@ -16,7 +16,7 @@ vivado*.backup*
 *.wcfg
 xsim.dir/
 *.pb
-
+*.vcd 
 # OS files
 .DS_Store
 Thumbs.db
@@ -24,3 +24,7 @@ Thumbs.db
 
 # Keep synthesis reports
 !synthesis/reports/*.rpt
+
+# Python cache
+__pycache__/
+*.pyc
