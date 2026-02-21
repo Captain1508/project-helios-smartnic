@@ -112,7 +112,52 @@ Hardware-accelerated packet timestamping and monitoring engine inspired by Smart
 Implementing deterministic hardware timestamping with nanosecond precision.
 
 ## Architecture
-[Block diagram — coming after Phase 1 complete]
+## Architecture
+
+### Phase 1: Packet Timestamp Core
+
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │            packet_timestamp_core                 │
+                    │                                                  │
+  clk ─────────────┼──────┬──────────────┬──────────────┬────────────│
+  rst_n ───────────┼──────┼──────────────┼──────────────┼────────────│
+                   │      │              │              │            │
+                   │  ┌───▼────────┐    │         ┌────▼─────────┐  │
+                   │  │ timestamp  │    │         │    stats     │  │
+                   │  │  _engine   │    │         │   _engine    │  │
+                   │  │            │    │         │              │  │
+                   │  │ 64-bit     │    │  pkt_   │ total_pkt ──┼──┼──► total_packets
+                   │  │ counter    │    │  start  │ total_bytes ┼──┼──► total_bytes
+                   │  │            │    │    │    │              │  │
+                   │  └─────┬──────┘    │    │    └──────────────┘  │
+                   │        │           │    │                       │
+                   │  current_timestamp │    │                       │
+                   │        ├───────────┼────┼───────────────────────┼──► current_timestamp
+                   │        │           │    │                       │
+                   │        │      ┌────▼────▼───┐                  │
+                   │        │      │   packet    │                  │
+                   │        │      │  _detector  │◄─── data_valid   │
+                   │        │      │    (FSM)    │                  │
+                   │        │      └──────┬──────┘                  │
+                   │        │             │ packet_start             │
+                   │        │             ├──────────────────────────┼──► packet_start
+                   │   ┌────▼─────────────▼──┐                      │
+                   │   │  timestamp capture  │                      │
+                   │   │  (latch on pkt_start)                      │
+                   │   └─────────────────────┼──────────────────────┼──► packet_timestamp
+                   │                         │    byte_count ───────┤
+                   └─────────────────────────┘                      │
+                                                                     └
+```
+
+**Signal Flow:**
+- `timestamp_engine` runs freely, counting every clock cycle
+- `packet_detector` monitors `data_valid`, fires `packet_start` pulse on rising edge
+- `stats_engine` accumulates packet count and total bytes
+- Timestamp is latched at the exact cycle `packet_start` fires → nanosecond-accurate capture
+
+---
 
 ## Project Phases
 - **Phase 1:** Packet Timestamp & Counter Core (Current)
@@ -125,6 +170,62 @@ Implementing deterministic hardware timestamping with nanosecond precision.
 - **HDL:** SystemVerilog
 - **Tools:** Vivado 2023.x
 - **Clock:** 100 MHz (Phase 1)
+
+---
+
+## How to Run
+
+### Prerequisites
+- Vivado 2023.x (or later)
+- SystemVerilog-compatible simulator (Vivado Simulator / ModelSim / Questa)
+
+### Simulation (Verify RTL)
+
+**Run individual module testbenches:**
+```tcl
+# In Vivado Tcl Console or simulator
+
+# Timestamp Engine
+xvlog --sv rtl/phase1/timestamp_engine.sv tb/tb_timestamp_engine.sv
+xelab tb_timestamp_engine -snapshot tb_ts
+xsim tb_ts -runall
+
+# Packet Detector FSM
+xvlog --sv rtl/phase1/packet_detector.sv tb/tb_packet_detector.sv
+xelab tb_packet_detector -snapshot tb_pd
+xsim tb_pd -runall
+
+# Statistics Engine
+xvlog --sv rtl/phase1/stats_engine.sv tb/tb_stats_engine.sv
+xelab tb_stats_engine -snapshot tb_se
+xsim tb_se -runall
+
+# Top-Level Integration
+xvlog --sv rtl/phase1/timestamp_engine.sv \
+              rtl/phase1/packet_detector.sv \
+              rtl/phase1/stats_engine.sv \
+              rtl/phase1/packet_timestamp_core.sv \
+              tb/tb_packet_timestamp_core.sv
+xelab tb_packet_timestamp_core -snapshot tb_core
+xsim tb_core -runall
+```
+
+**Expected output:** All tests PASS, no failures.
+
+### Synthesis (Vivado GUI)
+
+1. Create new RTL project, target: `xc7a35tcpg236-1` (Artix-7)
+2. Add sources:
+   - `rtl/phase1/*.sv` (all 4 RTL files)
+   - `constraints/timing_constraints.xdc`
+3. Set `packet_timestamp_core` as top module
+4. Flow Navigator → **Run Synthesis**
+5. Open Synthesized Design → Reports → Timing → Report Timing Summary
+
+**Expected results:**
+- WNS: +0.733 ns (timing met)
+- LUTs: 12, FFs: 257
+- Fmax: ~107.9 MHz
 
 ## Author
 Aman Sharma | [GitHub: Captain1508](https://github.com/Captain1508)
