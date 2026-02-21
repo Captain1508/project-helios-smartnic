@@ -112,7 +112,6 @@ Hardware-accelerated packet timestamping and monitoring engine inspired by Smart
 Implementing deterministic hardware timestamping with nanosecond precision.
 
 ## Architecture
-## Architecture
 
 ### Phase 1: Packet Timestamp Core
 
