@@ -156,6 +156,8 @@ Implementing deterministic hardware timestamping with nanosecond precision.
 - `stats_engine` accumulates packet count and total bytes
 - Timestamp is latched at the exact cycle `packet_start` fires → nanosecond-accurate capture
 
+### Vivado Elaborated Schematic
+![Elaborated Design](waveform/phase1/schematic_elaborated.png)
 ---
 
 ## Project Phases
